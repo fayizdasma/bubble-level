@@ -1,7 +1,9 @@
-package com.fm.bubblelevel;
+package com.fm.bubblelevel.view;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+
+import com.fm.bubblelevel.R;
 
 public class MainActivity extends AppCompatActivity {
 
