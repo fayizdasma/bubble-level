@@ -2,15 +2,21 @@ package com.fm.bubblelevel.view.custom;
 
 import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
+
+import com.fm.bubblelevel.model.SensorData;
 
 public class BubbleLevel extends View {
 
     private Paint paint;
     private String TAG = "bubble";
+    private SensorData sensorData;
+
 
     public BubbleLevel(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
@@ -28,7 +34,8 @@ public class BubbleLevel extends View {
     }
 
     //method to call the draw function
-    public void drawBubbleView() {
+    public void drawBubbleView(SensorData sensorData) {
+        this.sensorData = sensorData;
         invalidate();
     }
 
