@@ -8,6 +8,8 @@ import android.hardware.SensorManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.OrientationEventListener;
+import android.view.Surface;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -27,6 +29,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private ArrayList<SensorData> sensorDataArrayList;
     private BubbleLevel bubbleLevel;
     private LevelGraph levelGraph;
+    private OrientationEventListener orientationEventListener;
+    private int screenOrientation;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,6 +42,30 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         bubbleLevel = (BubbleLevel) findViewById(R.id.custom_view_bubble);
         levelGraph = (LevelGraph) findViewById(R.id.custom_view_graph);
 
+        // setup device orientation change listener
+        orientationEventListener = new OrientationEventListener(this, sensorManager.SENSOR_DELAY_NORMAL) {
+            @Override
+            public void onOrientationChanged(int orientation) {
+                if (orientation >= 315 || orientation < 45) {
+                    screenOrientation = 0;
+                } else if (orientation >= 45 && orientation < 135) {
+                    screenOrientation = 90;
+                } else if (orientation >= 135 && orientation < 225) {
+                    screenOrientation = 180;
+                } else if (orientation >= 225 && orientation < 315) {
+                    screenOrientation = 270;
+                }
+            }
+        };
+        if (orientationEventListener.canDetectOrientation() == true) {
+            Log.d(TAG, "orientation available");
+            orientationEventListener.enable();
+        } else {
+            Log.d(TAG, "orientation not available");
+            orientationEventListener.disable();
+        }
+
+        //setup rotation sensor listener
         if (sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) != null) {
             bubbleSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
             sensorManager.registerListener(this, bubbleSensor, SensorManager.SENSOR_DELAY_NORMAL);
@@ -57,21 +85,24 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             //calculate pitch and roll angles
             double pitch = Math.atan(xAxis / Math.sqrt(Math.pow(yAxis, 2) + Math.pow(zAxis, 2)));
             double roll = Math.atan(yAxis / Math.sqrt(Math.pow(xAxis, 2) + Math.pow(zAxis, 2)));
-            Log.d(TAG, "yes: " + " pitch " + Math.round(Math.toDegrees(pitch)) + " roll " + Math.round(Math.toDegrees(roll)));
-            rot.setText("pitch " + Math.round(Math.toDegrees(pitch)) + "\n"
-                    + "roll " + Math.round(Math.toDegrees(roll)) + "\n"
-            );
+
+            rot.setText("pitch " + Math.round(Math.toDegrees(pitch)) + "\n" + "roll " + Math.round(Math.toDegrees(roll)) + "\n");
+
             //store to array list
             SensorData sensorData = new SensorData();
             sensorData.setPitch(Math.round(Math.toDegrees(pitch)));
-            sensorData.setRoll( Math.round(Math.toDegrees(roll)));
+            sensorData.setRoll(Math.round(Math.toDegrees(roll)));
             sensorDataArrayList.add(sensorData);
+            //draw the bubble level
+            bubbleLevel.drawBubbleView(sensorData, screenOrientation);
+
+            Log.d(TAG, "yes: " + " pitch " + Math.round(Math.toDegrees(pitch)) + " roll " + Math.round(Math.toDegrees(roll)) + " orientation: " + screenOrientation);
         }
     }
 
+
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
-
     }
 
     @Override
@@ -84,5 +115,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     protected void onResume() {
         super.onResume();
         sensorManager.registerListener(this, bubbleSensor, SensorManager.SENSOR_DELAY_NORMAL);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        orientationEventListener.disable();
     }
 }

@@ -11,7 +11,8 @@
         android:id="@+id/rotation"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
+        android:layout_below="@+id/custom_view_bubble"
+        android:layout_centerHorizontal="true"
         android:textSize="22sp"
         tools:text="Hello World!" />
 
@@ -19,7 +20,8 @@
         android:id="@+id/custom_view_bubble"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentTop="true" />
+        android:layout_alignParentTop="true"
+        android:background="@color/colorLightBG" />
 
     <com.fm.bubblelevel.view.custom.LevelGraph
         android:id="@+id/custom_view_graph"
