@@ -1,6 +1,7 @@
 package com.fm.bubblelevel.view.custom;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -10,13 +11,14 @@ import android.util.Log;
 import android.view.View;
 
 import com.fm.bubblelevel.model.SensorData;
+import com.fm.bubblelevel.utils.AppConstants;
+
+import static com.fm.bubblelevel.utils.AppConstants.MAX_RANGE;
+import static com.fm.bubblelevel.utils.AppConstants.MIN_RANGE;
 
 public class BubbleLevel extends View {
 
     private static final float BUBBLE_RADIUS = 55f;
-    private static final float MAX_RANGE = 10;
-    private static final float MIN_RANGE = -10;
-
     private static final int TYPE_PORTRAIT = 1;
     private static final int TYPE_LANDSCAPE = 2;
     private static final int TYPE_FLAT = 3;
@@ -29,17 +31,21 @@ public class BubbleLevel extends View {
     private int centerHeight;
     private int viewWidth;
     private int viewHeight;
+    private SharedPreferences preferences;
     private int outerBorderWidth = 100;
-
+    private float tolranceLevel;
+    private Context context;
 
     public BubbleLevel(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
+        this.context = context;
         init();
     }
 
     //initialize variables
     private void init() {
         paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        preferences = context.getSharedPreferences(AppConstants.APP_SHARED_PREF, Context.MODE_PRIVATE);
     }
 
     @Override
@@ -50,21 +56,23 @@ public class BubbleLevel extends View {
         centerWidth = viewWidth / 2;
         centerHeight = viewHeight / 2;
 
+        tolranceLevel = preferences.getInt(AppConstants.SHARED_PREF_KEY_TOLERENCE_LEVEL, 0);
+
         Log.d(TAG, "onDraw: width: " + viewWidth + " height: " + viewHeight);
         if (sensorData != null) {
             //if device portrait or landscape, draw 1D bubble; else draw 2D bubble
             if ((screenOrientation == 0 | screenOrientation == 180) && ((sensorData.getRoll() >= 45 && sensorData.getRoll() < 135) || (sensorData.getRoll() <= -45 && sensorData.getRoll() > -135))) {
                 Log.d(TAG, "type: 1D Bubble portrait");
                 draw1DBubble(canvas, TYPE_PORTRAIT);
-                invalidate();
+                // invalidate();
             } else if (screenOrientation == 90 | screenOrientation == 270) {
                 Log.d(TAG, "type: 1D Bubble landscape");
                 draw1DBubble(canvas, TYPE_LANDSCAPE);
-                invalidate();
+                //invalidate();
             } else {
                 Log.d(TAG, "type: 2D Bubble flat");
                 draw2DBubble(canvas);
-                invalidate();
+                //invalidate();
             }
         }
     }
@@ -76,7 +84,6 @@ public class BubbleLevel extends View {
 
         //check max/min range
         if (sensorData.getRoll() > MAX_RANGE || sensorData.getPitch() > MAX_RANGE) {
-            paint.setColor(Color.RED);
             if (sensorData.getRoll() > MAX_RANGE) {
                 cx = (float) (sensorData.getPitch() * 10 + centerWidth);
                 cy = (float) (viewHeight - (MAX_RANGE * 10 + centerHeight));
@@ -85,7 +92,6 @@ public class BubbleLevel extends View {
                 cy = (float) (viewHeight - (sensorData.getRoll() * 10 + centerHeight));
             }
         } else if (sensorData.getRoll() < MIN_RANGE || sensorData.getPitch() < MIN_RANGE) {
-            paint.setColor(Color.RED);
             if (sensorData.getRoll() < MIN_RANGE) {
                 cx = (float) (sensorData.getPitch() * 10 + centerWidth);
                 cy = (float) (viewHeight - (MIN_RANGE * 10 + centerHeight));
@@ -94,10 +100,16 @@ public class BubbleLevel extends View {
                 cy = (float) (viewHeight - (sensorData.getRoll() * 10 + centerHeight));
             }
         } else {
-            paint.setColor(Color.GREEN);
             cx = (float) sensorData.getPitch() * 10 + centerWidth;
             cy = (float) (viewHeight - (sensorData.getRoll() * 10 + centerHeight));
         }
+
+        //tolerance color
+        if ((sensorData.getRoll() > (0 + tolranceLevel) || sensorData.getRoll() < (0 - tolranceLevel)) || (sensorData.getPitch() > (0 + tolranceLevel) || sensorData.getPitch() < (0 - tolranceLevel))) {
+            paint.setColor(Color.RED);
+        } else
+            paint.setColor(Color.GREEN);
+        //draw circle bubble
         canvas.drawCircle(cx, cy, BUBBLE_RADIUS, paint);
 
         //draw center dot
@@ -121,15 +133,12 @@ public class BubbleLevel extends View {
         //check max/min range
         if (type == TYPE_PORTRAIT) {
             if (sensorData.getPitch() > MAX_RANGE) {
-                paint.setColor(Color.RED);
                 cx = viewWidth - (MAX_RANGE * 10 + centerWidth);
                 cy = centerHeight;
             } else if (sensorData.getPitch() < MIN_RANGE) {
-                paint.setColor(Color.RED);
                 cx = viewWidth - (MIN_RANGE * 10 + centerWidth);
                 cy = centerHeight;
             } else {
-                paint.setColor(Color.GREEN);
                 cx = (float) (viewWidth - (sensorData.getPitch() * 10 + centerWidth));
                 cy = centerHeight;
             }
@@ -138,17 +147,20 @@ public class BubbleLevel extends View {
             borderTop = (centerHeight) - outerBorderWidth;
             borderRight = viewWidth;
             borderBottom = (centerHeight) + outerBorderWidth;
+
+            //tolerance color
+            if (sensorData.getPitch() > (0 + tolranceLevel) || sensorData.getPitch() < (0 - tolranceLevel)) {
+                paint.setColor(Color.RED);
+            } else
+                paint.setColor(Color.GREEN);
         } else {
             if (sensorData.getRoll() > MAX_RANGE) {
-                paint.setColor(Color.RED);
                 cx = centerWidth;
                 cy = (viewHeight - (MAX_RANGE * 10 + centerHeight));
             } else if (sensorData.getRoll() < MIN_RANGE) {
-                paint.setColor(Color.RED);
                 cx = centerWidth;
                 cy = (viewHeight - (MIN_RANGE * 10 + centerHeight));
             } else {
-                paint.setColor(Color.GREEN);
                 cx = centerWidth;
                 cy = (float) (viewHeight - (sensorData.getRoll() * 10 + centerHeight));
             }
@@ -158,7 +170,14 @@ public class BubbleLevel extends View {
             borderTop = 0;
             borderRight = (centerWidth) + outerBorderWidth;
             borderBottom = viewHeight;
+
+            //tolerance color
+            if (sensorData.getRoll() > (0 + tolranceLevel) || sensorData.getRoll() < (0 - tolranceLevel)) {
+                paint.setColor(Color.RED);
+            } else
+                paint.setColor(Color.GREEN);
         }
+        //draw circle bubble
         canvas.drawCircle(cx, cy, BUBBLE_RADIUS, paint);
 
         //draw center dot
@@ -171,7 +190,8 @@ public class BubbleLevel extends View {
     }
 
     //method to call the draw function
-    public void drawBubbleView(SensorData sensorData, int screenOrientation) {
+    public void drawBubbleView(Context context, SensorData sensorData, int screenOrientation) {
+        // this.context = context;
         this.sensorData = sensorData;
         this.screenOrientation = screenOrientation;
         invalidate();

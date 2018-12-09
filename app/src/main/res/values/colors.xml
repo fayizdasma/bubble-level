@@ -8,4 +8,5 @@
     <color name="colorRed">#e2121d</color>
 
     <color name="colorLightBG">#eaeaea</color>
+    <color name="colorBarGraph">#ffc107</color>
 </resources>

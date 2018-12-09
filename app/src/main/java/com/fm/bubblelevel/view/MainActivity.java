@@ -1,6 +1,7 @@
 package com.fm.bubblelevel.view;
 
 import android.content.Context;
+import android.content.Intent;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -8,6 +9,9 @@ import android.hardware.SensorManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.OrientationEventListener;
 import android.view.Surface;
 import android.widget.TextView;
@@ -26,7 +30,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private SensorManager sensorManager;
     private Sensor bubbleSensor;
     private TextView rot;
-    private ArrayList<SensorData> sensorDataArrayList;
+
     private BubbleLevel bubbleLevel;
     private LevelGraph levelGraph;
     private OrientationEventListener orientationEventListener;
@@ -69,7 +73,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         if (sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) != null) {
             bubbleSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
             sensorManager.registerListener(this, bubbleSensor, SensorManager.SENSOR_DELAY_NORMAL);
-            sensorDataArrayList = new ArrayList<>();
         } else {
             Toast.makeText(this, "Sensor not found", Toast.LENGTH_SHORT).show();
         }
@@ -92,14 +95,30 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             SensorData sensorData = new SensorData();
             sensorData.setPitch(Math.round(Math.toDegrees(pitch)));
             sensorData.setRoll(Math.round(Math.toDegrees(roll)));
-            sensorDataArrayList.add(sensorData);
             //draw the bubble level
-            bubbleLevel.drawBubbleView(sensorData, screenOrientation);
+            bubbleLevel.drawBubbleView(this, sensorData, screenOrientation);
+            //draw the level graph
+            //levelGraph.drawLevelGraph(sensorData, screenOrientation);
 
             Log.d(TAG, "yes: " + " pitch " + Math.round(Math.toDegrees(pitch)) + " roll " + Math.round(Math.toDegrees(roll)) + " orientation: " + screenOrientation);
         }
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.menu_settings:
+                startActivity(new Intent(this, SettingsActivity.class));
+                break;
+        }
+        return super.onOptionsItemSelected(item);
+    }
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
