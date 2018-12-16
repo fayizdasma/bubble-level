@@ -12,6 +12,7 @@ import android.view.View;
 
 import com.fm.bubblelevel.model.SensorData;
 import com.fm.bubblelevel.utils.AppConstants;
+import com.fm.bubblelevel.utils.AppUtils;
 
 import static com.fm.bubblelevel.utils.AppConstants.MAX_RANGE;
 import static com.fm.bubblelevel.utils.AppConstants.MIN_RANGE;
@@ -34,6 +35,7 @@ public class BubbleLevel extends View {
     private int outerBorderWidth = 100;
     private float toleranceLevel;
     private Context context;
+    private boolean isVibration;
 
     public BubbleLevel(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
@@ -57,6 +59,7 @@ public class BubbleLevel extends View {
 
         //get tolerance value from shared preference
         toleranceLevel = preferences.getInt(AppConstants.SHARED_PREF_KEY_TOLERENCE_LEVEL, 0);
+        isVibration = preferences.getBoolean(AppConstants.SHARED_PREF_KEY_IS_VIBRATION, true);
 
         Log.d(TAG, "onDraw: width: " + viewWidth + " height: " + viewHeight);
         if (sensorData != null) {
@@ -108,6 +111,8 @@ public class BubbleLevel extends View {
         //set color based on tolerance
         if ((sensorData.getRoll() > (0 + toleranceLevel) || sensorData.getRoll() < (0 - toleranceLevel)) || (sensorData.getPitch() > (0 + toleranceLevel) || sensorData.getPitch() < (0 - toleranceLevel))) {
             paint.setColor(Color.RED);
+            if (isVibration)
+                AppUtils.shortVibrate(context);
         } else
             paint.setColor(Color.GREEN);
         //draw circle bubble
@@ -152,6 +157,8 @@ public class BubbleLevel extends View {
             //tolerance color
             if (sensorData.getPitch() > (0 + toleranceLevel) || sensorData.getPitch() < (0 - toleranceLevel)) {
                 paint.setColor(Color.RED);
+                if (isVibration)
+                    AppUtils.shortVibrate(context);
             } else
                 paint.setColor(Color.GREEN);
         } else {
@@ -175,6 +182,8 @@ public class BubbleLevel extends View {
             //tolerance color
             if (sensorData.getRoll() > (0 + toleranceLevel) || sensorData.getRoll() < (0 - toleranceLevel)) {
                 paint.setColor(Color.RED);
+                if (isVibration)
+                    AppUtils.shortVibrate(context);
             } else
                 paint.setColor(Color.GREEN);
         }

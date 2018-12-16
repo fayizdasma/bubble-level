@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="15dp"
+
     tools:context=".view.SettingsActivity">
 
     <TextView
@@ -12,6 +12,7 @@
         android:layout_height="wrap_content"
         android:text="Tolerance Level"
         android:textColor="@color/colorAccent"
+        android:padding="15dp"
         android:textSize="16sp" />
 
     <TextView
@@ -29,5 +30,20 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:indeterminate="false" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginVertical="20dp"
+        android:background="@color/colorLightBG" />
+
+    <Switch
+        android:id="@+id/switch_vibrate"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="10dp"
+        android:text="Vibrate on Tolerance"
+        android:textColor="@color/colorAccent"
+        android:textSize="16sp" />
 
 </LinearLayout>
