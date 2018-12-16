@@ -86,28 +86,23 @@ public class BubbleLevel extends View {
         float gap = 35;
         int MULTIPLIER = 15;
         paint.setStyle(Paint.Style.FILL);
+        Log.d(TAG, "roll " + sensorData.getRoll() + " pitch " + sensorData.getPitch());
 
-        //check max/min range
-        if (sensorData.getRoll() > MAX_RANGE || sensorData.getPitch() > MAX_RANGE) {
-            if (sensorData.getRoll() > MAX_RANGE) {
-                cx = (float) (sensorData.getPitch() * MULTIPLIER + centerWidth);
-                cy = (float) (viewHeight - (MAX_RANGE * MULTIPLIER + centerHeight));
-            } else if (sensorData.getPitch() > MAX_RANGE) {
-                cx = (float) (MAX_RANGE * MULTIPLIER + centerWidth);
-                cy = (float) (viewHeight - (sensorData.getRoll() * MULTIPLIER + centerHeight));
-            }
-        } else if (sensorData.getRoll() < MIN_RANGE || sensorData.getPitch() < MIN_RANGE) {
-            if (sensorData.getRoll() < MIN_RANGE) {
-                cx = (float) (sensorData.getPitch() * MULTIPLIER + centerWidth);
-                cy = (float) (viewHeight - (MIN_RANGE * MULTIPLIER + centerHeight));
-            } else if (sensorData.getPitch() < MIN_RANGE) {
-                cx = (float) (MIN_RANGE * MULTIPLIER + centerWidth);
-                cy = (float) (viewHeight - (sensorData.getRoll() * MULTIPLIER + centerHeight));
-            }
-        } else {
-            cx = (float) sensorData.getPitch() * MULTIPLIER + centerWidth;
+        //check max/min range pitch
+        if (sensorData.getPitch() > MAX_RANGE)
+            cx = (float) (MAX_RANGE * MULTIPLIER + centerWidth);
+        else if (sensorData.getPitch() < MIN_RANGE)
+            cx = (float) (MIN_RANGE * MULTIPLIER + centerWidth);
+        else
+            cx = (float) (sensorData.getPitch() * MULTIPLIER + centerWidth);
+
+        //check max/min range pitch
+        if (sensorData.getRoll() > MAX_RANGE)
+            cy = (float) (viewHeight - (MAX_RANGE * MULTIPLIER + centerHeight));
+        else if (sensorData.getRoll() < MIN_RANGE)
+            cy = (float) (viewHeight - (MIN_RANGE * MULTIPLIER + centerHeight));
+        else
             cy = (float) (viewHeight - (sensorData.getRoll() * MULTIPLIER + centerHeight));
-        }
 
         //set color based on tolerance
         if ((sensorData.getRoll() > (0 + toleranceLevel) || sensorData.getRoll() < (0 - toleranceLevel)) || (sensorData.getPitch() > (0 + toleranceLevel) || sensorData.getPitch() < (0 - toleranceLevel))) {
