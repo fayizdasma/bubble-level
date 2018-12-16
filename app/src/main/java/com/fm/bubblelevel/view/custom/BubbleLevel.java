@@ -15,13 +15,12 @@ import com.fm.bubblelevel.utils.AppConstants;
 
 import static com.fm.bubblelevel.utils.AppConstants.MAX_RANGE;
 import static com.fm.bubblelevel.utils.AppConstants.MIN_RANGE;
+import static com.fm.bubblelevel.utils.AppConstants.TYPE_LANDSCAPE;
+import static com.fm.bubblelevel.utils.AppConstants.TYPE_PORTRAIT;
 
 public class BubbleLevel extends View {
 
     private static final float BUBBLE_RADIUS = 55f;
-    private static final int TYPE_PORTRAIT = 1;
-    private static final int TYPE_LANDSCAPE = 2;
-    private static final int TYPE_FLAT = 3;
 
     private Paint paint;
     private String TAG = "lvl";
@@ -33,7 +32,7 @@ public class BubbleLevel extends View {
     private int viewHeight;
     private SharedPreferences preferences;
     private int outerBorderWidth = 100;
-    private float tolranceLevel;
+    private float toleranceLevel;
     private Context context;
 
     public BubbleLevel(Context context, @Nullable AttributeSet attrs) {
@@ -56,7 +55,8 @@ public class BubbleLevel extends View {
         centerWidth = viewWidth / 2;
         centerHeight = viewHeight / 2;
 
-        tolranceLevel = preferences.getInt(AppConstants.SHARED_PREF_KEY_TOLERENCE_LEVEL, 0);
+        //get tolerance value from shared preference
+        toleranceLevel = preferences.getInt(AppConstants.SHARED_PREF_KEY_TOLERENCE_LEVEL, 0);
 
         Log.d(TAG, "onDraw: width: " + viewWidth + " height: " + viewHeight);
         if (sensorData != null) {
@@ -104,8 +104,8 @@ public class BubbleLevel extends View {
             cy = (float) (viewHeight - (sensorData.getRoll() * 10 + centerHeight));
         }
 
-        //tolerance color
-        if ((sensorData.getRoll() > (0 + tolranceLevel) || sensorData.getRoll() < (0 - tolranceLevel)) || (sensorData.getPitch() > (0 + tolranceLevel) || sensorData.getPitch() < (0 - tolranceLevel))) {
+        //set color based on tolrance
+        if ((sensorData.getRoll() > (0 + toleranceLevel) || sensorData.getRoll() < (0 - toleranceLevel)) || (sensorData.getPitch() > (0 + toleranceLevel) || sensorData.getPitch() < (0 - toleranceLevel))) {
             paint.setColor(Color.RED);
         } else
             paint.setColor(Color.GREEN);
@@ -130,8 +130,8 @@ public class BubbleLevel extends View {
         int borderBottom;
         paint.setStyle(Paint.Style.FILL);
 
-        //check max/min range
         if (type == TYPE_PORTRAIT) {
+            //check max/min range
             if (sensorData.getPitch() > MAX_RANGE) {
                 cx = viewWidth - (MAX_RANGE * 10 + centerWidth);
                 cy = centerHeight;
@@ -149,7 +149,7 @@ public class BubbleLevel extends View {
             borderBottom = (centerHeight) + outerBorderWidth;
 
             //tolerance color
-            if (sensorData.getPitch() > (0 + tolranceLevel) || sensorData.getPitch() < (0 - tolranceLevel)) {
+            if (sensorData.getPitch() > (0 + toleranceLevel) || sensorData.getPitch() < (0 - toleranceLevel)) {
                 paint.setColor(Color.RED);
             } else
                 paint.setColor(Color.GREEN);
@@ -172,7 +172,7 @@ public class BubbleLevel extends View {
             borderBottom = viewHeight;
 
             //tolerance color
-            if (sensorData.getRoll() > (0 + tolranceLevel) || sensorData.getRoll() < (0 - tolranceLevel)) {
+            if (sensorData.getRoll() > (0 + toleranceLevel) || sensorData.getRoll() < (0 - toleranceLevel)) {
                 paint.setColor(Color.RED);
             } else
                 paint.setColor(Color.GREEN);
@@ -190,8 +190,7 @@ public class BubbleLevel extends View {
     }
 
     //method to call the draw function
-    public void drawBubbleView(Context context, SensorData sensorData, int screenOrientation) {
-        // this.context = context;
+    public void drawBubbleView(SensorData sensorData, int screenOrientation) {
         this.sensorData = sensorData;
         this.screenOrientation = screenOrientation;
         invalidate();

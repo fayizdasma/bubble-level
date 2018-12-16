@@ -14,6 +14,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.OrientationEventListener;
 import android.view.Surface;
+import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -23,6 +24,9 @@ import com.fm.bubblelevel.view.custom.BubbleLevel;
 import com.fm.bubblelevel.view.custom.LevelGraph;
 
 import java.util.ArrayList;
+
+import static com.fm.bubblelevel.utils.AppConstants.MAX_RANGE;
+import static com.fm.bubblelevel.utils.AppConstants.MIN_RANGE;
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
@@ -35,10 +39,14 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private LevelGraph levelGraph;
     private OrientationEventListener orientationEventListener;
     private int screenOrientation;
+    private static final int SENSOR_DELAY_TIME = 16 * 1000;
+    private float[] filteredValues;
+    private static final float LOW_PASS_FILTER_AMOUNT = 0.5f;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
         setContentView(R.layout.activity_main);
 
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
@@ -47,7 +55,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         levelGraph = (LevelGraph) findViewById(R.id.custom_view_graph);
 
         // setup device orientation change listener
-        orientationEventListener = new OrientationEventListener(this, sensorManager.SENSOR_DELAY_NORMAL) {
+        orientationEventListener = new OrientationEventListener(this, SENSOR_DELAY_TIME) {
             @Override
             public void onOrientationChanged(int orientation) {
                 if (orientation >= 315 || orientation < 45) {
@@ -72,7 +80,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         //setup rotation sensor listener
         if (sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) != null) {
             bubbleSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-            sensorManager.registerListener(this, bubbleSensor, SensorManager.SENSOR_DELAY_NORMAL);
+            sensorManager.registerListener(this, bubbleSensor, SENSOR_DELAY_TIME);
         } else {
             Toast.makeText(this, "Sensor not found", Toast.LENGTH_SHORT).show();
         }
@@ -81,27 +89,58 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     @Override
     public void onSensorChanged(SensorEvent event) {
         if (event.values != null) {
-            double xAxis = event.values[0];
-            double yAxis = event.values[1];
-            double zAxis = event.values[2];
+            //filtered sensor values
+            filteredValues = getLowPassFilterValues(event.values, filteredValues);
+            double xAxis = filteredValues[0];
+            double yAxis = filteredValues[1];
+            double zAxis = filteredValues[2];
+
+            Log.d(TAG, "value 0 " + event.values[0]);
+            Log.d(TAG, "value 1 " + event.values[1]);
+            Log.d(TAG, "value 2 " + event.values[2]);
+
 
             //calculate pitch and roll angles
             double pitch = Math.atan(xAxis / Math.sqrt(Math.pow(yAxis, 2) + Math.pow(zAxis, 2)));
             double roll = Math.atan(yAxis / Math.sqrt(Math.pow(xAxis, 2) + Math.pow(zAxis, 2)));
 
-            rot.setText("pitch " + Math.round(Math.toDegrees(pitch)) + "\n" + "roll " + Math.round(Math.toDegrees(roll)) + "\n");
-
-            //store to array list
+            long roundedPitch = Math.round(Math.toDegrees(pitch));
+            long roundedRoll = Math.round(Math.toDegrees(roll));
+            //store to array list in range [-10,10]
             SensorData sensorData = new SensorData();
-            sensorData.setPitch(Math.round(Math.toDegrees(pitch)));
-            sensorData.setRoll(Math.round(Math.toDegrees(roll)));
-            //draw the bubble level
-            bubbleLevel.drawBubbleView(this, sensorData, screenOrientation);
-            //draw the level graph
-            //levelGraph.drawLevelGraph(sensorData, screenOrientation);
+            sensorData.setPitch(roundedPitch);
+            sensorData.setRoll(roundedRoll);
 
-            Log.d(TAG, "yes: " + " pitch " + Math.round(Math.toDegrees(pitch)) + " roll " + Math.round(Math.toDegrees(roll)) + " orientation: " + screenOrientation);
+
+            //draw the bubble level
+            bubbleLevel.drawBubbleView(sensorData, screenOrientation);
+            //draw the level graph
+            levelGraph.drawLevelGraph(sensorData, screenOrientation);
+
+            if (roundedPitch < MIN_RANGE) {
+                roundedPitch = MIN_RANGE;
+            } else if (roundedPitch > MAX_RANGE) {
+                roundedPitch = MAX_RANGE;
+            }
+            if (roundedRoll < MIN_RANGE) {
+                roundedRoll = MIN_RANGE;
+            } else if (roundedRoll > MAX_RANGE) {
+                roundedRoll = MAX_RANGE;
+            }
+            rot.setText("x: " + roundedPitch + "\n" + "y: " + roundedRoll + "\n");
+            Log.d(TAG, "yes: " + " pitch " + roundedPitch + " roll " + roundedRoll + " orientation: " + screenOrientation);
         }
+    }
+
+    //smooths the sensor data using low pass filter algorithm
+    private float[] getLowPassFilterValues(float[] newValue, float[] oldValue) {
+        if (oldValue == null) {
+            return newValue;
+        }
+        for (int i = 0; i < newValue.length; i++) {
+            oldValue[i] = oldValue[i] + LOW_PASS_FILTER_AMOUNT * (newValue[i] - oldValue[i]);
+        }
+        return oldValue;
     }
 
     @Override
@@ -133,7 +172,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     @Override
     protected void onResume() {
         super.onResume();
-        sensorManager.registerListener(this, bubbleSensor, SensorManager.SENSOR_DELAY_NORMAL);
+        sensorManager.registerListener(this, bubbleSensor, SENSOR_DELAY_TIME);
     }
 
     @Override
