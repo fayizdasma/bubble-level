@@ -80,6 +80,7 @@ public class BubbleLevel extends View {
     private void draw2DBubble(Canvas canvas) {
         float cx = 0;
         float cy = 0;
+        float gap = 35;
         paint.setStyle(Paint.Style.FILL);
 
         //check max/min range
@@ -104,7 +105,7 @@ public class BubbleLevel extends View {
             cy = (float) (viewHeight - (sensorData.getRoll() * 10 + centerHeight));
         }
 
-        //set color based on tolrance
+        //set color based on tolerance
         if ((sensorData.getRoll() > (0 + toleranceLevel) || sensorData.getRoll() < (0 - toleranceLevel)) || (sensorData.getPitch() > (0 + toleranceLevel) || sensorData.getPitch() < (0 - toleranceLevel))) {
             paint.setColor(Color.RED);
         } else
@@ -118,7 +119,7 @@ public class BubbleLevel extends View {
 
         //outer border circle
         paint.setStyle(Paint.Style.STROKE);
-        canvas.drawCircle(centerWidth, centerHeight, ((float) 10 + centerHeight), paint);
+        canvas.drawCircle(centerWidth, centerHeight, ((float) 10 + centerHeight - gap), paint);
     }
 
     private void draw1DBubble(Canvas canvas, int type) {

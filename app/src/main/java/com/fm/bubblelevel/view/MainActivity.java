@@ -10,10 +10,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.OrientationEventListener;
-import android.view.Surface;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -22,8 +20,6 @@ import com.fm.bubblelevel.R;
 import com.fm.bubblelevel.model.SensorData;
 import com.fm.bubblelevel.view.custom.BubbleLevel;
 import com.fm.bubblelevel.view.custom.LevelGraph;
-
-import java.util.ArrayList;
 
 import static com.fm.bubblelevel.utils.AppConstants.MAX_RANGE;
 import static com.fm.bubblelevel.utils.AppConstants.MIN_RANGE;
@@ -95,11 +91,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             double yAxis = filteredValues[1];
             double zAxis = filteredValues[2];
 
-            Log.d(TAG, "value 0 " + event.values[0]);
-            Log.d(TAG, "value 1 " + event.values[1]);
-            Log.d(TAG, "value 2 " + event.values[2]);
-
-
             //calculate pitch and roll angles
             double pitch = Math.atan(xAxis / Math.sqrt(Math.pow(yAxis, 2) + Math.pow(zAxis, 2)));
             double roll = Math.atan(yAxis / Math.sqrt(Math.pow(xAxis, 2) + Math.pow(zAxis, 2)));
@@ -110,7 +101,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             SensorData sensorData = new SensorData();
             sensorData.setPitch(roundedPitch);
             sensorData.setRoll(roundedRoll);
-
 
             //draw the bubble level
             bubbleLevel.drawBubbleView(sensorData, screenOrientation);
@@ -128,7 +118,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 roundedRoll = MAX_RANGE;
             }
             rot.setText("x: " + roundedPitch + "\n" + "y: " + roundedRoll + "\n");
-            Log.d(TAG, "yes: " + " pitch " + roundedPitch + " roll " + roundedRoll + " orientation: " + screenOrientation);
+            Log.d(TAG, "pitch " + roundedPitch + " roll " + roundedRoll + " orientation: " + screenOrientation);
         }
     }
 

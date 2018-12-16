@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.DashPathEffect;
 import android.graphics.Paint;
 import android.graphics.RectF;
 import android.support.annotation.Nullable;
@@ -24,13 +25,14 @@ import static com.fm.bubblelevel.utils.AppConstants.TYPE_PORTRAIT;
 
 public class LevelGraph extends View {
 
+    private Paint paintPitch;
+    private Paint paintRoll;
     private Paint paint;
     private String TAG = "graph";
     private ArrayList<Integer> getYAxisIntervals;
     private ArrayList<Integer> getXAxisIntervals;
     private int screenOrientation;
     private float deviceWidth;
-    private RectF recBar;
     private float onePointY;
     private int MAX_NO_SAMPLES = 50;
     private ArrayList<SensorData> sensorDataArrayList;
@@ -52,12 +54,16 @@ public class LevelGraph extends View {
 
     //initialize variables
     private void init() {
+        paintPitch = new Paint(Paint.ANTI_ALIAS_FLAG);
+        paintRoll = new Paint(Paint.ANTI_ALIAS_FLAG);
         paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        recBar = new RectF();
         sensorDataArrayList = new ArrayList<>();
         getYAxisIntervals = getYAxisIntervals();
         getXAxisIntervals = getXAxisIntervals();
         preferences = context.getSharedPreferences(AppConstants.APP_SHARED_PREF, Context.MODE_PRIVATE);
+        paintRoll.setPathEffect(new DashPathEffect(new float[]{6, 11, 16, 21}, 0));
+        paintRoll.setStrokeWidth(2);
+        paintPitch.setStrokeWidth(5);
     }
 
     @Override
@@ -89,7 +95,7 @@ public class LevelGraph extends View {
 
     private void draw1DGraph(Canvas canvas, int type) {
 
-        if (type == TYPE_PORTRAIT) {
+        // if (type == TYPE_PORTRAIT) {
             //draw y-axis intervals and lines
             paint.setTextAlign(Paint.Align.LEFT);
             for (int i = 0; i < getYAxisIntervals.size(); i++) {
@@ -140,9 +146,9 @@ public class LevelGraph extends View {
                 Log.d(TAG, " size():  " + sensorDataArrayList.size() + " i " + i);
                 //set color based on tolerance
                 if (sensorDataArrayList.get(i).getPitch() > (0 + toleranceLevel) || sensorDataArrayList.get(i).getPitch() < (0 - toleranceLevel)) {
-                    paint.setColor(Color.RED);
+                    paintPitch.setColor(Color.RED);
                 } else
-                    paint.setColor(Color.GREEN);
+                    paintPitch.setColor(Color.GREEN);
 
                 if ((i + 1) < sensorDataArrayList.size()) {
                     double pitch = sensorDataArrayList.get(i).getPitch();
@@ -163,7 +169,7 @@ public class LevelGraph extends View {
                         stopX = startX + (onePointX * (i + 1));
                     }
                     stopY = (float) ((graphCenter - gapStarting - gap) - (pitch * onePointY));
-                    canvas.drawLine(startX, startY, stopX, stopY, paint);
+                    canvas.drawLine(startX, startY, stopX, stopY, paintPitch);
                     //  Log.d(TAG, "i:" + i + " pitch:  " + sensorDataArrayList.get(i).getPitch() + " sX " + startX + " sY " + startY + " eX " + stopX + " eY " + stopY);
                     previousStopX = stopX;
                     previousStopY = stopY;
@@ -171,10 +177,134 @@ public class LevelGraph extends View {
                     // Log.d(TAG, "previousStopY " + previousStopY);
                 }
             }
-        }
+        //  }
     }
 
     private void draw2DGraph(Canvas canvas) {
+        //draw y-axis intervals and lines
+        paint.setTextAlign(Paint.Align.LEFT);
+        for (int i = 0; i < getYAxisIntervals.size(); i++) {
+            float pointY = ((widthGraph / getYAxisIntervals.size()) * i) + gap;
+            //draw black color for y center line
+            if (i == (int) Math.ceil(getYAxisIntervals.size() / 2)) {
+                paint.setColor(Color.BLACK);
+                canvas.drawLine(gapStarting, pointY, deviceWidth, pointY, paint);
+            } else {
+                paint.setColor(Color.LTGRAY);
+                canvas.drawLine(gapStarting, pointY, deviceWidth, pointY, paint);
+            }
+            paint.setColor(Color.DKGRAY);
+            paint.setTextSize(20);
+            canvas.drawText(String.valueOf(getYAxisIntervals.get(i)), gap, pointY, paint);
+        }
+
+        //draw x-axis intervals and lines
+        for (int i = 0; i < getXAxisIntervals.size(); i++) {
+            paint.setColor(Color.LTGRAY);
+            float pointX = ((widthGraph / getXAxisIntervals.size()) * i) + gapStarting;
+            canvas.drawLine(pointX, deviceWidth - gap, pointX, gap, paint);
+            paint.setTextAlign(Paint.Align.RIGHT);
+            paint.setColor(Color.DKGRAY);
+            paint.setTextSize(20);
+            //for drawing 0
+            if (i == 0) {
+                // canvas.drawText("0", pointX, deviceWidth, paint);
+            } else
+                canvas.drawText(String.valueOf(getXAxisIntervals.get(i)), pointX, (deviceWidth / 2) - gapStarting, paint);
+            //small hack to show label or 50
+            if (i == getXAxisIntervals.size() - 1)
+                canvas.drawText("50", deviceWidth, (deviceWidth / 2) - gapStarting, paint);
+            paint.setTextAlign(Paint.Align.LEFT);
+        }
+
+        //draw line graph pitch
+        float previousStopX = 0;
+        float previousStopY = 0;
+        float stopY;
+        float stopX;
+        float startY;
+        float startX;
+        float startXRoll;
+        float startYRoll;
+        float stopXRoll;
+        float stopYRoll;
+        float previousStopXRoll = 0;
+        float previousStopYRoll = 0;
+        onePointX = ((deviceWidth) / MAX_NO_SAMPLES) / 5;
+        onePointY = ((widthGraph / getYAxisIntervals.size()) / 5);
+
+        for (int i = 0; i < sensorDataArrayList.size(); i++) {
+            Log.d(TAG, " size():  " + sensorDataArrayList.size() + " i " + i);
+            //set color based on tolerance
+            double pitch = sensorDataArrayList.get(i).getPitch();
+            double roll = sensorDataArrayList.get(i).getRoll();
+            if ((roll > (0 + toleranceLevel) || roll < (0 - toleranceLevel))) {
+                paintRoll.setColor(Color.RED);
+            } else
+                paintRoll.setColor(Color.GREEN);
+            if (pitch > (0 + toleranceLevel) || pitch < (0 - toleranceLevel)) {
+                paintPitch.setColor(Color.RED);
+            } else
+                paintPitch.setColor(Color.GREEN);
+
+            if ((i + 1) < sensorDataArrayList.size()) {
+
+                //limit pitch to range [-10,10]
+                if (pitch < MIN_RANGE) {
+                    pitch = MIN_RANGE;
+                } else if (pitch > MAX_RANGE) {
+                    pitch = MAX_RANGE;
+                }
+                //limit roll to range [-10,10]
+                if (roll < MIN_RANGE) {
+                    roll = MIN_RANGE;
+                } else if (roll > MAX_RANGE) {
+                    roll = MAX_RANGE;
+                }
+
+                //if first data Pitch
+                if (i == 0) {
+                    startX = gapStarting + previousStopX;
+                    startY = (float) ((graphCenter - gapStarting - gap) - (pitch * onePointY));
+                    stopX = gapStarting + (onePointX * (i + 1));
+                } else {
+                    startX = previousStopX;
+                    startY = previousStopY;
+                    stopX = startX + (onePointX * (i + 1));
+                }
+                stopY = (float) ((graphCenter - gapStarting - gap) - (pitch * onePointY));
+                canvas.drawLine(startX, startY, stopX, stopY, paintPitch);
+                //  Log.d(TAG, "i:" + i + " pitch:  " + sensorDataArrayList.get(i).getPitch() + " sX " + startX + " sY " + startY + " eX " + stopX + " eY " + stopY);
+                previousStopX = stopX;
+                previousStopY = stopY;
+
+                //if first data Roll
+                if (i == 0) {
+                    startXRoll = gapStarting + previousStopXRoll;
+                    startYRoll = (float) ((graphCenter - gapStarting - gap) - (roll * onePointY));
+                    stopXRoll = gapStarting + (onePointX * (i + 1));
+                } else {
+                    startXRoll = previousStopXRoll;
+                    startYRoll = previousStopYRoll;
+                    stopXRoll = startXRoll + (onePointX * (i + 1));
+                }
+                stopYRoll = (float) ((graphCenter - gapStarting - gap) - (roll * onePointY));
+                canvas.drawLine(startXRoll, startYRoll, stopXRoll, stopYRoll, paintRoll);
+                //  Log.d(TAG, "i:" + i + " roll:  " + sensorDataArrayList.get(i).getRoll() + " sX " + startXRoll + " sY " + startYRoll + " eX " + stopXRoll + " eY " + stopYRoll);
+                previousStopXRoll = stopXRoll;
+                previousStopYRoll = stopYRoll;
+            }
+        }
+        //labels for showing legend
+        paint.setStyle(Paint.Style.STROKE);
+        canvas.drawRect(deviceWidth - 300, gapStarting, deviceWidth - gap, gapStarting + 100, paint);
+        canvas.drawLine(deviceWidth - 270, gapStarting + 25, deviceWidth - 150, gapStarting + 25, paintPitch);
+        paintPitch.setTextSize(30);
+        canvas.drawText("X", deviceWidth - 100, gapStarting + 35, paintPitch);
+        canvas.drawLine(deviceWidth - 270, gapStarting + 70, deviceWidth - 150, gapStarting + 70, paintRoll);
+        paintRoll.setTextSize(30);
+        canvas.drawText("Y", deviceWidth - 100, gapStarting + 80, paintRoll);
+
     }
 
     //method to call the draw function
