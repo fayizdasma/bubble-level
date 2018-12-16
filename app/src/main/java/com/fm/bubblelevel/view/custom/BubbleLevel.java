@@ -58,7 +58,7 @@ public class BubbleLevel extends View {
         centerHeight = viewHeight / 2;
 
         //get tolerance value from shared preference
-        toleranceLevel = preferences.getInt(AppConstants.SHARED_PREF_KEY_TOLERENCE_LEVEL, 0);
+        toleranceLevel = preferences.getInt(AppConstants.SHARED_PREF_KEY_TOLERENCE_LEVEL, 5);
         isVibration = preferences.getBoolean(AppConstants.SHARED_PREF_KEY_IS_VIBRATION, true);
 
         Log.d(TAG, "onDraw: width: " + viewWidth + " height: " + viewHeight);
@@ -163,21 +163,20 @@ public class BubbleLevel extends View {
                 paint.setColor(Color.GREEN);
         } else {
             if (sensorData.getRoll() > MAX_RANGE) {
-                cx = centerWidth;
-                cy = (viewHeight - (MAX_RANGE * 10 + centerHeight));
+                cx = viewWidth - (MAX_RANGE * 10 + centerWidth);
+                cy = centerHeight;
             } else if (sensorData.getRoll() < MIN_RANGE) {
-                cx = centerWidth;
-                cy = (viewHeight - (MIN_RANGE * 10 + centerHeight));
+                cx = viewWidth - (MIN_RANGE * 10 + centerWidth);
+                cy = centerHeight;
             } else {
-                cx = centerWidth;
-                cy = (float) (viewHeight - (sensorData.getRoll() * 10 + centerHeight));
+                cx = (float) (viewWidth - (sensorData.getRoll() * 10 + centerWidth));
+                cy = centerHeight;
             }
-
             //outer border params
-            borderLeft = (centerWidth) - outerBorderWidth;
-            borderTop = 0;
-            borderRight = (centerWidth) + outerBorderWidth;
-            borderBottom = viewHeight;
+            borderLeft = 0;
+            borderTop = (centerHeight) - outerBorderWidth;
+            borderRight = viewWidth;
+            borderBottom = (centerHeight) + outerBorderWidth;
 
             //tolerance color
             if (sensorData.getRoll() > (0 + toleranceLevel) || sensorData.getRoll() < (0 - toleranceLevel)) {

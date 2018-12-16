@@ -117,7 +117,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             } else if (roundedRoll > MAX_RANGE) {
                 roundedRoll = MAX_RANGE;
             }
-            rot.setText("x: " + roundedPitch + "\n" + "y: " + roundedRoll + "\n");
+            rot.setText("x: " + roundedPitch + "°\n" + "y: " + roundedRoll + "°\n");
             Log.d(TAG, "pitch " + roundedPitch + " roll " + roundedRoll + " orientation: " + screenOrientation);
         }
     }
