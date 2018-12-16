@@ -7,6 +7,6 @@
     <color name="colorGreen">#5eef10</color>
     <color name="colorRed">#e2121d</color>
 
-    <color name="colorLightBG">#eaeaea</color>
+    <color name="colorLightBG">#f2f2f2</color>
     <color name="colorBarGraph">#ffc107</color>
 </resources>

@@ -76,7 +76,7 @@ public class LevelGraph extends View {
         widthGraph = deviceWidth - gapStarting;
 
         //get tolerance value from shared preference
-        toleranceLevel = preferences.getInt(AppConstants.SHARED_PREF_KEY_TOLERENCE_LEVEL, 0);
+        toleranceLevel = preferences.getInt(AppConstants.SHARED_PREF_KEY_TOLERANCE_LEVEL, 5);
 
         if (sensorDataArrayList.size() > 0) {
             //if device portrait or landscape, draw 1D graph; else draw 2D graph
@@ -126,7 +126,7 @@ public class LevelGraph extends View {
                     // canvas.drawText("0", pointX, deviceWidth, paint);
                 } else
                     canvas.drawText(String.valueOf(getXAxisIntervals.get(i)), pointX, (deviceWidth / 2) - gapStarting, paint);
-                //small hack to show label or 50
+                //small hack to show label for 50
                 if (i == getXAxisIntervals.size() - 1)
                     canvas.drawText("50", deviceWidth, (deviceWidth / 2) - gapStarting, paint);
                 paint.setTextAlign(Paint.Align.LEFT);

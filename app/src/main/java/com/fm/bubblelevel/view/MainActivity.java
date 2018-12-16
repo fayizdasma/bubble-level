@@ -2,6 +2,7 @@ package com.fm.bubblelevel.view;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -18,6 +19,7 @@ import android.widget.Toast;
 
 import com.fm.bubblelevel.R;
 import com.fm.bubblelevel.model.SensorData;
+import com.fm.bubblelevel.utils.AppConstants;
 import com.fm.bubblelevel.view.custom.BubbleLevel;
 import com.fm.bubblelevel.view.custom.LevelGraph;
 
@@ -37,7 +39,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private int screenOrientation;
     private static final int SENSOR_DELAY_TIME = 16 * 1000;
     private float[] filteredValues;
-    private static final float LOW_PASS_FILTER_AMOUNT = 0.5f;
+    private static final float LOW_PASS_FILTER_AMOUNT = 1f;
+    private SharedPreferences preferences;
+    private boolean isTiltAngleShown;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,6 +53,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         rot = (TextView) findViewById(R.id.rotation);
         bubbleLevel = (BubbleLevel) findViewById(R.id.custom_view_bubble);
         levelGraph = (LevelGraph) findViewById(R.id.custom_view_graph);
+
+        preferences = getSharedPreferences(AppConstants.APP_SHARED_PREF, Context.MODE_PRIVATE);
 
         // setup device orientation change listener
         orientationEventListener = new OrientationEventListener(this, SENSOR_DELAY_TIME) {
@@ -118,6 +124,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 roundedRoll = MAX_RANGE;
             }
             rot.setText("x: " + roundedPitch + "°\n" + "y: " + roundedRoll + "°\n");
+            rot.setVisibility(isTiltAngleShown ? View.VISIBLE : View.GONE);
+
             Log.d(TAG, "pitch " + roundedPitch + " roll " + roundedRoll + " orientation: " + screenOrientation);
         }
     }
@@ -163,6 +171,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     protected void onResume() {
         super.onResume();
         sensorManager.registerListener(this, bubbleSensor, SENSOR_DELAY_TIME);
+        if (preferences != null)
+            isTiltAngleShown = preferences.getBoolean(AppConstants.SHARED_PREF_KEY_IS_TILT_ANGLE, true);
     }
 
     @Override

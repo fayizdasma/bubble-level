@@ -20,7 +20,7 @@ public class SettingsActivity extends AppCompatActivity {
     private SharedPreferences preferences;
     private SharedPreferences.Editor editor;
     private Switch switch_vibrate;
-
+    private Switch switch_tilt_angle;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,24 +31,28 @@ public class SettingsActivity extends AppCompatActivity {
         seekBar = (SeekBar) findViewById(R.id.seekBar);
         tv_seekbar_val = (TextView) findViewById(R.id.tv_seekbar_val);
         switch_vibrate = (Switch) findViewById(R.id.switch_vibrate);
+        switch_tilt_angle = (Switch) findViewById(R.id.switch_tilt_angle);
         seekBar.setMax(AppConstants.MAX_RANGE);
 
         //get value from shared preference and pre-set
         preferences = this.getSharedPreferences(AppConstants.APP_SHARED_PREF, Context.MODE_PRIVATE);
         editor = preferences.edit();
-        int progress = preferences.getInt(AppConstants.SHARED_PREF_KEY_TOLERENCE_LEVEL, 5);
+        int progress = preferences.getInt(AppConstants.SHARED_PREF_KEY_TOLERANCE_LEVEL, 5);
         seekBar.setProgress(progress);
         tv_seekbar_val.setText("+/- " + progress);
 
         boolean isVibration = preferences.getBoolean(AppConstants.SHARED_PREF_KEY_IS_VIBRATION, true);
         switch_vibrate.setChecked(isVibration);
 
+        boolean isTiltAngle = preferences.getBoolean(AppConstants.SHARED_PREF_KEY_IS_TILT_ANGLE, true);
+        switch_tilt_angle.setChecked(isTiltAngle);
+
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 tv_seekbar_val.setText("+/- " + progress);
                 //save to shared preference
-                editor.putInt(AppConstants.SHARED_PREF_KEY_TOLERENCE_LEVEL, progress);
+                editor.putInt(AppConstants.SHARED_PREF_KEY_TOLERANCE_LEVEL, progress);
                 editor.commit();
             }
 
@@ -68,6 +72,14 @@ public class SettingsActivity extends AppCompatActivity {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 editor.putBoolean(AppConstants.SHARED_PREF_KEY_IS_VIBRATION, isChecked);
+                editor.commit();
+            }
+        });
+
+        switch_tilt_angle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                editor.putBoolean(AppConstants.SHARED_PREF_KEY_IS_TILT_ANGLE, isChecked);
                 editor.commit();
             }
         });

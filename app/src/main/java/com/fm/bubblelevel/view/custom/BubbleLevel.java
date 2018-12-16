@@ -22,7 +22,6 @@ import static com.fm.bubblelevel.utils.AppConstants.TYPE_PORTRAIT;
 public class BubbleLevel extends View {
 
     private static final float BUBBLE_RADIUS = 55f;
-
     private Paint paint;
     private String TAG = "lvl";
     private SensorData sensorData;
@@ -32,7 +31,7 @@ public class BubbleLevel extends View {
     private int viewWidth;
     private int viewHeight;
     private SharedPreferences preferences;
-    private int outerBorderWidth = 100;
+    private int outerBorderWidth;
     private float toleranceLevel;
     private Context context;
     private boolean isVibration;
@@ -47,6 +46,7 @@ public class BubbleLevel extends View {
     private void init() {
         paint = new Paint(Paint.ANTI_ALIAS_FLAG);
         preferences = context.getSharedPreferences(AppConstants.APP_SHARED_PREF, Context.MODE_PRIVATE);
+        outerBorderWidth = (int) (BUBBLE_RADIUS + 1);
     }
 
     @Override
@@ -58,7 +58,7 @@ public class BubbleLevel extends View {
         centerHeight = viewHeight / 2;
 
         //get tolerance value from shared preference
-        toleranceLevel = preferences.getInt(AppConstants.SHARED_PREF_KEY_TOLERENCE_LEVEL, 5);
+        toleranceLevel = preferences.getInt(AppConstants.SHARED_PREF_KEY_TOLERANCE_LEVEL, 5);
         isVibration = preferences.getBoolean(AppConstants.SHARED_PREF_KEY_IS_VIBRATION, true);
 
         Log.d(TAG, "onDraw: width: " + viewWidth + " height: " + viewHeight);
@@ -84,28 +84,29 @@ public class BubbleLevel extends View {
         float cx = 0;
         float cy = 0;
         float gap = 35;
+        int MULTIPLIER = 15;
         paint.setStyle(Paint.Style.FILL);
 
         //check max/min range
         if (sensorData.getRoll() > MAX_RANGE || sensorData.getPitch() > MAX_RANGE) {
             if (sensorData.getRoll() > MAX_RANGE) {
-                cx = (float) (sensorData.getPitch() * 10 + centerWidth);
-                cy = (float) (viewHeight - (MAX_RANGE * 10 + centerHeight));
+                cx = (float) (sensorData.getPitch() * MULTIPLIER + centerWidth);
+                cy = (float) (viewHeight - (MAX_RANGE * MULTIPLIER + centerHeight));
             } else if (sensorData.getPitch() > MAX_RANGE) {
-                cx = (float) (MAX_RANGE * 10 + centerWidth);
-                cy = (float) (viewHeight - (sensorData.getRoll() * 10 + centerHeight));
+                cx = (float) (MAX_RANGE * MULTIPLIER + centerWidth);
+                cy = (float) (viewHeight - (sensorData.getRoll() * MULTIPLIER + centerHeight));
             }
         } else if (sensorData.getRoll() < MIN_RANGE || sensorData.getPitch() < MIN_RANGE) {
             if (sensorData.getRoll() < MIN_RANGE) {
-                cx = (float) (sensorData.getPitch() * 10 + centerWidth);
-                cy = (float) (viewHeight - (MIN_RANGE * 10 + centerHeight));
+                cx = (float) (sensorData.getPitch() * MULTIPLIER + centerWidth);
+                cy = (float) (viewHeight - (MIN_RANGE * MULTIPLIER + centerHeight));
             } else if (sensorData.getPitch() < MIN_RANGE) {
-                cx = (float) (MIN_RANGE * 10 + centerWidth);
-                cy = (float) (viewHeight - (sensorData.getRoll() * 10 + centerHeight));
+                cx = (float) (MIN_RANGE * MULTIPLIER + centerWidth);
+                cy = (float) (viewHeight - (sensorData.getRoll() * MULTIPLIER + centerHeight));
             }
         } else {
-            cx = (float) sensorData.getPitch() * 10 + centerWidth;
-            cy = (float) (viewHeight - (sensorData.getRoll() * 10 + centerHeight));
+            cx = (float) sensorData.getPitch() * MULTIPLIER + centerWidth;
+            cy = (float) (viewHeight - (sensorData.getRoll() * MULTIPLIER + centerHeight));
         }
 
         //set color based on tolerance
@@ -122,9 +123,18 @@ public class BubbleLevel extends View {
         paint.setColor(Color.BLACK);
         canvas.drawCircle(centerWidth, centerHeight, 5f, paint);
 
+        //inner border circle
+        paint.setStyle(Paint.Style.STROKE);
+        canvas.drawCircle(centerWidth, centerHeight, BUBBLE_RADIUS + MULTIPLIER, paint);
+
         //outer border circle
         paint.setStyle(Paint.Style.STROKE);
         canvas.drawCircle(centerWidth, centerHeight, ((float) 10 + centerHeight - gap), paint);
+
+        //tolerance border circle
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setColor(Color.LTGRAY);
+        canvas.drawCircle(centerWidth, centerHeight, (toleranceLevel * MULTIPLIER) + BUBBLE_RADIUS, paint);
     }
 
     private void draw1DBubble(Canvas canvas, int type) {
@@ -134,24 +144,25 @@ public class BubbleLevel extends View {
         int borderTop;
         int borderRight;
         int borderBottom;
+        int MULTIPLIER = 20;
         paint.setStyle(Paint.Style.FILL);
 
         if (type == TYPE_PORTRAIT) {
             //check max/min range
             if (sensorData.getPitch() > MAX_RANGE) {
-                cx = viewWidth - (MAX_RANGE * 10 + centerWidth);
+                cx = viewWidth - (MAX_RANGE * MULTIPLIER + centerWidth);
                 cy = centerHeight;
             } else if (sensorData.getPitch() < MIN_RANGE) {
-                cx = viewWidth - (MIN_RANGE * 10 + centerWidth);
+                cx = viewWidth - (MIN_RANGE * MULTIPLIER + centerWidth);
                 cy = centerHeight;
             } else {
-                cx = (float) (viewWidth - (sensorData.getPitch() * 10 + centerWidth));
+                cx = (float) (viewWidth - (sensorData.getPitch() * MULTIPLIER + centerWidth));
                 cy = centerHeight;
             }
             //outer border params
-            borderLeft = 0;
+            borderLeft = (int) (centerWidth - (MAX_RANGE * MULTIPLIER) - BUBBLE_RADIUS);
             borderTop = (centerHeight) - outerBorderWidth;
-            borderRight = viewWidth;
+            borderRight = (int) (centerWidth + (MAX_RANGE * MULTIPLIER) + BUBBLE_RADIUS);
             borderBottom = (centerHeight) + outerBorderWidth;
 
             //tolerance color
@@ -163,19 +174,19 @@ public class BubbleLevel extends View {
                 paint.setColor(Color.GREEN);
         } else {
             if (sensorData.getRoll() > MAX_RANGE) {
-                cx = viewWidth - (MAX_RANGE * 10 + centerWidth);
+                cx = viewWidth - (MAX_RANGE * MULTIPLIER + centerWidth);
                 cy = centerHeight;
             } else if (sensorData.getRoll() < MIN_RANGE) {
-                cx = viewWidth - (MIN_RANGE * 10 + centerWidth);
+                cx = viewWidth - (MIN_RANGE * MULTIPLIER + centerWidth);
                 cy = centerHeight;
             } else {
-                cx = (float) (viewWidth - (sensorData.getRoll() * 10 + centerWidth));
+                cx = (float) (viewWidth - (sensorData.getRoll() * MULTIPLIER + centerWidth));
                 cy = centerHeight;
             }
             //outer border params
-            borderLeft = 0;
+            borderLeft = (int) (centerWidth - (MAX_RANGE * MULTIPLIER) - BUBBLE_RADIUS);
             borderTop = (centerHeight) - outerBorderWidth;
-            borderRight = viewWidth;
+            borderRight = (int) (centerWidth + (MAX_RANGE * MULTIPLIER) + BUBBLE_RADIUS);
             borderBottom = (centerHeight) + outerBorderWidth;
 
             //tolerance color
@@ -193,8 +204,18 @@ public class BubbleLevel extends View {
         paint.setColor(Color.BLACK);
         canvas.drawCircle(centerWidth, centerHeight, 5f, paint);
 
+        //border line markings
+        canvas.drawLine(centerWidth - BUBBLE_RADIUS, borderTop, centerWidth - BUBBLE_RADIUS, borderBottom, paint);
+        canvas.drawLine(centerWidth + BUBBLE_RADIUS, borderTop, centerWidth + BUBBLE_RADIUS, borderBottom, paint);
+
+        //tolerance lines
+        paint.setColor(Color.LTGRAY);
+        canvas.drawLine(centerWidth - BUBBLE_RADIUS - (toleranceLevel * MULTIPLIER), borderTop, centerWidth - BUBBLE_RADIUS - (toleranceLevel * MULTIPLIER), borderBottom, paint);
+        canvas.drawLine(centerWidth + BUBBLE_RADIUS + (toleranceLevel * MULTIPLIER), borderTop, centerWidth + BUBBLE_RADIUS + (toleranceLevel * MULTIPLIER), borderBottom, paint);
+
         //outer border
         paint.setStyle(Paint.Style.STROKE);
+        paint.setColor(Color.BLACK);
         canvas.drawRect(borderLeft, borderTop, borderRight, borderBottom, paint);
     }
 
